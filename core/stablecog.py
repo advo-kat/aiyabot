@@ -147,6 +147,12 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
         required=False,
     )
     @option(
+        'poseref',
+        discord.Attachment,
+        description='The pose reference image URL.',
+        required=False,
+    )
+    @option(
         'init_url',
         str,
         description='The starter URL image for generation. This overrides init_image!',
@@ -175,6 +181,7 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                             strength: Optional[str] = None,
                             init_image: Optional[discord.Attachment] = None,
                             init_url: Optional[str],
+                            poseref: Optional[discord.Attachment] = None,
                             batch: Optional[str] = None):
 
         # update defaults with any new defaults from settingscog
@@ -337,7 +344,7 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
         # set up tuple of parameters to pass into the Discord view
         input_tuple = (
             ctx, simple_prompt, prompt, negative_prompt, data_model, steps, width, height, guidance_scale, sampler, seed, strength,
-            init_image, batch, styles, facefix, highres_fix, clip_skip, extra_net, epoch_time, facedetail)
+            init_image, batch, styles, facefix, highres_fix, clip_skip, extra_net, epoch_time, facedetail, poseref)
         
         view = viewhandler.DrawView(input_tuple)
         # setup the queue
@@ -439,6 +446,25 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                     ]
                 }
             }
+
+            # add poseref settings
+                        # update payload if init_img or init_url is used
+            if queue_object.poseref is not None:
+                pimage = base64.b64encode(requests.get(queue_object.poseref.url, stream=True).content).decode('utf-8')
+                controlnet_payload = {
+                    "controlnet": {
+                        "args": [
+                            {
+                                "input_image": 'data:image/png;base64,' + pimage,
+                                "module": "openpose_full", 
+                                "model": "control_v11p_sd15_openpose [cab727d4]",
+                                "resize_mode": 2,
+                                "pixel_perfect": True
+                            }
+                        ]
+                    }
+                }
+                alwayson_scripts_settings.update(controlnet_payload)
 
             # update payload with override_settings
             override_payload = {
@@ -546,6 +572,9 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                     batch_seed[10] += 1
                     new_tuple = tuple(batch_seed)
                     queue_object.view.input_tuple = new_tuple
+                
+                if queue_object.poseref is not None:
+                    break    
 
             # set up discord message
             content = f'> for {queue_object.ctx.author.name}'
@@ -600,7 +629,10 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
             
             else:
                 content = f'<@{queue_object.ctx.author.id}>, {message}'
-                filename=f'{queue_object.seed}-{count}.png'
+                if queue_object.poseref is not None:
+                    filename=f'{queue_object.seed}-1.png'
+                else:
+                    filename=f'{queue_object.seed}-{count}.png'
                 file = add_metadata_to_image(image,str_parameters, filename)
                 queuehandler.process_post(
                     self, queuehandler.PostObject(

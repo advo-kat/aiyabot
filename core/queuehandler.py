@@ -6,7 +6,7 @@ from threading import Thread
 class DrawObject:
     def __init__(self, cog, ctx, simple_prompt, prompt, negative_prompt, data_model, steps, width, height,
                  guidance_scale, sampler, seed, strength, init_image, batch, styles, facefix, highres_fix,
-                 clip_skip, extra_net, epoch_time, facedetail, view):
+                 clip_skip, extra_net, epoch_time, facedetail, poseref, view):
         self.cog = cog
         self.ctx = ctx
         self.simple_prompt = simple_prompt
@@ -25,6 +25,7 @@ class DrawObject:
         self.styles = styles
         self.facefix = facefix
         self.facedetail = facedetail
+        self.poseref = poseref
         self.highres_fix = highres_fix
         self.clip_skip = clip_skip
         self.extra_net = extra_net
