@@ -116,6 +116,12 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
         choices=settings.global_var.facefix_models,
     )
     @option(
+        'facedetail',
+        bool,
+        description='Improves facial details for wider compositions.',
+        required=False,
+    )
+    @option(
         'highres_fix',
         str,
         description='Tries to fix issues from generating high-res images. Recommended: Latent (nearest).',
@@ -163,6 +169,7 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                             styles: Optional[str] = None,
                             extra_net: Optional[str] = None,
                             facefix: Optional[str] = None,
+                            facedetail: Optional[bool] = False,
                             highres_fix: Optional[str] = None,
                             clip_skip: Optional[int] = None,
                             strength: Optional[str] = None,
@@ -189,6 +196,8 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
             styles = settings.read(channel)['style']
         if facefix is None:
             facefix = settings.read(channel)['facefix']
+        if facedetail is None:
+            facedetail = settings.read(channel)['facedetail']
         if highres_fix is None:
             highres_fix = settings.read(channel)['highres_fix']
         if clip_skip is None:
@@ -328,7 +337,7 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
         # set up tuple of parameters to pass into the Discord view
         input_tuple = (
             ctx, simple_prompt, prompt, negative_prompt, data_model, steps, width, height, guidance_scale, sampler, seed, strength,
-            init_image, batch, styles, facefix, highres_fix, clip_skip, extra_net, epoch_time)
+            init_image, batch, styles, facefix, highres_fix, clip_skip, extra_net, epoch_time, facedetail)
         
         view = viewhandler.DrawView(input_tuple)
         # setup the queue
@@ -415,11 +424,33 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                 }
                 payload.update(facefix_payload)
 
+
+            # add facedetail settings
+            alwayson_scripts_settings = {
+                "ADetailer": {
+                    "args": [
+                        queue_object.facedetail,
+                        {
+                            "ad_model": "face_yolov8n.pt",
+                            "ad_use_inpaint_width_height": True,
+                            "ad_inpaint_width": 768,
+                            "ad_inpaint_height": 768,
+                        }
+                    ]
+                }
+            }
+
             # update payload with override_settings
             override_payload = {
                 "override_settings": override_settings
             }
             payload.update(override_payload)
+
+            # update payload with alwayson_scripts
+            alwayson_scripts_payload = {
+                "alwayson_scripts": alwayson_scripts_settings
+            }
+            payload.update(alwayson_scripts_payload)
 
             # send normal payload to webui and only send model payload if one is defined
             s = settings.authenticate_user()

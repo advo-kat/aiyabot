@@ -171,6 +171,12 @@ class SettingsCog(commands.Cog):
         description='Set default strength (for init_img) for the channel (0.0 to 1.0).'
     )
     @option(
+        'facedetail',
+        bool,
+        description='Improves facial details for wider compositions.',
+        required=False,
+    )
+    @option(
         'batch',
         str,
         description='Set default batch for the channel (count,size)',
@@ -211,6 +217,7 @@ class SettingsCog(commands.Cog):
                                highres_fix: Optional[str] = None,
                                clip_skip: Optional[int] = None,
                                strength: Optional[str] = None,
+                               facedetail: Optional[bool] = False,
                                batch: Optional[str] = None,
                                max_batch: Optional[str] = None,
                                upscaler_1: Optional[str] = None,
@@ -316,6 +323,11 @@ class SettingsCog(commands.Cog):
         if facefix is not None:
             settings.update(channel, 'facefix', facefix)
             new += f'\nFacefix: ``"{facefix}"``'
+            set_new = True
+
+        if facedetail is not None:
+            settings.update(channel, 'facedetail', facedetail)
+            new += f'\nFacedetail: ``"{facedetail}"``'
             set_new = True
 
         if highres_fix is not None:

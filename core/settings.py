@@ -82,6 +82,7 @@ strength = "0.75"
 batch = "1,1"
 max_batch = "1,1"
 upscaler_1 = "ESRGAN_4x"
+facedetail = "False"
 """
 
 
@@ -276,6 +277,7 @@ def generate_template(template_pop, config):
     template_pop['batch'] = config['batch']
     template_pop['max_batch'] = config['max_batch']
     template_pop['upscaler_1'] = config['upscaler_1']
+    template_pop['facedetail'] = config['facedetail']
     return template_pop
 
 

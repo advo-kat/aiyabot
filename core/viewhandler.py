@@ -33,10 +33,11 @@ input_tuple[0] = ctx
 [17] = clip_skip
 [18] = extra_net
 [19] = epoch_time
+[20] = facedetail
 '''
 tuple_names = ['ctx', 'simple_prompt', 'prompt', 'negative_prompt', 'data_model', 'steps', 'width', 'height',
                'guidance_scale', 'sampler', 'seed', 'strength', 'init_image', 'batch', 'styles', 'facefix',
-               'highres_fix', 'clip_skip', 'extra_net', 'epoch_time']
+               'highres_fix', 'clip_skip', 'extra_net', 'epoch_time', 'facedetail']
 
 
 # the modal that is used for the 🖋 button
@@ -217,6 +218,14 @@ class DrawModal(Modal):
                     invalid_input = True
                     embed_err.add_field(name=f"`{line.split(':', 1)[1]}` can't fix faces! I have suggestions.",
                                         value=', '.join(['`%s`' % x for x in settings.global_var.facefix_models]),
+                                        inline=False)
+            if 'facedetail:' in line:
+                try:
+                    pen[20] = bool(line.split(':', 1)[1].replace(",", "."))
+                except(Exception,):
+                    invalid_input = True
+                    embed_err.add_field(name=f"`{line.split(':', 1)[1]}` is not valid for facedetail!.",
+                                        value='Make sure you enter a boolean (True or False).',
                                         inline=False)
             if 'clip_skip:' in line:
                 try:
